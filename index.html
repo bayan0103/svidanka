@@ -30,13 +30,30 @@
   .heart-bg span{position:absolute;bottom:-40px;opacity:.4;animation:rise linear infinite}
   @keyframes rise{to{transform:translateY(-112vh) rotate(360deg);opacity:0}}
 
-  .hint{
-    position:fixed;bottom:28px;left:0;right:0;text-align:center;z-index:20;
-    font-family:'Manrope',sans-serif;font-size:14px;letter-spacing:.05em;color:#9a6a58;
-    animation:pulse 1.8s ease-in-out infinite;pointer-events:none;
+  .nav{
+    position:fixed;bottom:26px;left:0;right:0;z-index:20;
+    display:flex;align-items:center;justify-content:center;gap:18px;
   }
-  @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
-  .hint.hide{display:none}
+  .hint{
+    font-family:'Manrope',sans-serif;font-size:14px;letter-spacing:.04em;color:#9a6a58;
+    min-width:150px;text-align:center;
+  }
+  .hint.hide{opacity:0}
+  .navbtn{
+    width:52px;height:52px;border-radius:50%;
+    border:1px solid rgba(209,86,127,.45);
+    background:rgba(255,255,255,.75);
+    color:var(--rose-deep);font-size:28px;line-height:1;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 16px -6px rgba(180,90,110,.5);
+    transition:transform .12s ease,background .2s ease,opacity .2s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .navbtn:hover{background:#fff;transform:scale(1.06)}
+  .navbtn:active{transform:scale(.94)}
+  .navbtn:disabled{opacity:.3;cursor:default;transform:none}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
   .scene{position:relative;z-index:1;width:340px;height:230px;perspective:1600px}
   @media (max-width:380px){.scene{width:300px;height:205px}}
@@ -154,7 +171,11 @@
 
   </div>
 
-  <p class="hint" id="hint">нажми на конверт 💌</p>
+  <div class="nav" id="nav">
+    <button class="navbtn" id="prev" aria-label="Назад" disabled>‹</button>
+    <span class="hint" id="hint">нажми вперёд 💌</span>
+    <button class="navbtn" id="next" aria-label="Вперёд">›</button>
+  </div>
 
 <script>
   const hearts=document.getElementById('hearts');
@@ -171,23 +192,29 @@
 
   const scene=document.getElementById('scene');
   const hint=document.getElementById('hint');
-  const hints=['нажми на конверт 💌','ещё разок — поближе 🔍','и ещё раз — раскрой ✨',''];
-  let step=0;
-  // классы этапов по порядку
+  const env=document.getElementById('env');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+
   const stages=['stage-open','stage-out','stage-zoom','stage-reveal'];
+  const hints=['нажми вперёд 💌','конверт открыт ✨','открытка выехала 💌','поближе… 🔍','раскрыто 💛'];
+  let step=0;
 
-  function next(){
-    if(step>=stages.length) return;
-    // конверт открывается на первом шаге и уезжает после выезда открытки
-    scene.classList.add(stages[step]);
-    if(step===1){ // открытка выехала — прячем конверт
-      document.getElementById('env').style.opacity='0';
-    }
-    step++;
+  function render(){
+    // применяем классы этапов по текущему шагу
+    stages.forEach((cls,i)=>{
+      scene.classList.toggle(cls, i<step);
+    });
+    // конверт виден только до того, как открытка выехала (шаг >=2 прячем)
+    env.style.opacity = (step>=2) ? '0' : '1';
+
     hint.textContent = hints[step] || '';
-    if(!hints[step]) hint.classList.add('hide');
+    prevBtn.disabled = (step===0);
+    nextBtn.disabled = (step===stages.length);
 
-    if(step===stages.length){ // финал — салют
+    // финал — салют один раз
+    if(step===stages.length && !scene.dataset.done){
+      scene.dataset.done='1';
       for(let i=0;i<20;i++){
         const s=document.createElement('span');
         s.textContent='💛';
@@ -197,10 +224,25 @@
         hearts.appendChild(s);
       }
     }
+    if(step<stages.length) scene.dataset.done='';
   }
 
-  scene.addEventListener('click',next);
-  scene.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();next();}});
+  function go(dir){
+    step=Math.max(0,Math.min(stages.length,step+dir));
+    render();
+  }
+
+  nextBtn.addEventListener('click',()=>go(1));
+  prevBtn.addEventListener('click',()=>go(-1));
+  // тап по сцене = вперёд; стрелки клавиатуры тоже листают
+  scene.addEventListener('click',()=>go(1));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='Enter'||e.key===' '){e.preventDefault();go(1);}
+    if(e.key==='ArrowLeft'){e.preventDefault();go(-1);}
+  });
+
+  render();
+
 </script>
 </body>
 </html>
