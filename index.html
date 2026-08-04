@@ -170,7 +170,7 @@
 
   <div class="nav" id="nav">
     <button class="navbtn" id="prev" aria-label="Назад" disabled>‹</button>
-    <span class="hint" id="hint">нажми вперёд 💌</span>
+    <span class="hint" id="hint">нажми на конверт 💌</span>
     <button class="navbtn" id="next" aria-label="Вперёд">›</button>
   </div>
 
@@ -197,7 +197,6 @@ const PHOTOS=["photos/1.jpg","photos/2.jpg","photos/3.jpg","photos/4.jpg","photo
   const pagenum=document.getElementById('pagenum');
 
   const stages=['stage-open','stage-out','stage-zoom','stage-reveal'];
-  const hints=['нажми вперёд 💌','конверт открыт ✨','открытка выехала 💌','поближе… 🔍'];
   // всего шагов: этапы открытия (4) + перелистывание фото (PHOTOS.length)
   const total = stages.length + PHOTOS.length;   // финальный «шаг» = последняя фото
   let step=0;
@@ -217,15 +216,19 @@ const PHOTOS=["photos/1.jpg","photos/2.jpg","photos/3.jpg","photos/4.jpg","photo
     stages.forEach((cls,i)=>scene.classList.toggle(cls, i<openStep));
     env.style.opacity=(step>=2)?'0':'1';
 
-    // фаза открытия vs фаза фото
-    if(step<=stages.length){
-      hint.textContent=hints[step]||'листай фото →';
-      // на этапе раскрытия показываем первую фотку
-      if(step===stages.length) setPhoto(0);
-    }else{
-      const photoIdx=step-stages.length; // 1..N-1 → индекс 1..
-      setPhoto(photoIdx);
-      hint.textContent = (photoIdx===PHOTOS.length-1)?'наша история 💛':'листай дальше →';
+    // подсказка строго по номеру шага
+    if(step===0) hint.textContent='нажми на конверт 💌';
+    else if(step===1) hint.textContent='конверт открыт ✨';
+    else if(step===2) hint.textContent='открытка выехала 💌';
+    else if(step===3) hint.textContent='поближе… 🔍';
+    else {
+      const photoIdx=step-stages.length;
+      hint.textContent=(photoIdx===PHOTOS.length-1)?'наша история 💛':'листай фото →';
+    }
+
+    // фото показываем только начиная с раскрытия (step>=4)
+    if(step>=stages.length){
+      setPhoto(step-stages.length);
     }
 
     prevBtn.disabled=(step===0);
