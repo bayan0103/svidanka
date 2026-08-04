@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#e7b7a6">
+<title>Для тебя 💌</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#fff2ea;--bg2:#f3c7b6;
+    --env:#e8a48c;--env-dark:#d98a6e;--env-flap:#e59a80;
+    --ink:#5a3a2e;--rose:#e8759a;--rose-deep:#d1567f;--gold:#c99a5b;--paper:#fffaf3;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    font-family:'Cormorant',Georgia,serif;color:var(--ink);
+    background:radial-gradient(circle at 50% 18%,var(--bg1),var(--bg2));
+    min-height:100vh;min-height:100dvh;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;overflow:hidden;position:relative;
+  }
+
+  .heart-bg{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .heart-bg span{position:absolute;bottom:-40px;opacity:.4;animation:rise linear infinite}
+  @keyframes rise{to{transform:translateY(-112vh) rotate(360deg);opacity:0}}
+
+  .nav{
+    position:fixed;bottom:26px;left:0;right:0;z-index:20;
+    display:flex;align-items:center;justify-content:center;gap:18px;
+  }
+  .hint{
+    font-family:'Manrope',sans-serif;font-size:14px;letter-spacing:.04em;color:#9a6a58;
+    min-width:150px;text-align:center;
+  }
+  .hint.hide{opacity:0}
+  .navbtn{
+    width:52px;height:52px;border-radius:50%;
+    border:1px solid rgba(209,86,127,.45);
+    background:rgba(255,255,255,.75);
+    color:var(--rose-deep);font-size:28px;line-height:1;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 16px -6px rgba(180,90,110,.5);
+    transition:transform .12s ease,background .2s ease,opacity .2s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .navbtn:hover{background:#fff;transform:scale(1.06)}
+  .navbtn:active{transform:scale(.94)}
+  .navbtn:disabled{opacity:.3;cursor:default;transform:none}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+  .scene{position:relative;z-index:1;width:400px;height:270px;perspective:1600px}
+  @media (max-width:440px){.scene{width:330px;height:225px}}
+
+  /* ---------- КОНВЕРТ ---------- */
+  .envelope{position:absolute;inset:0;filter:drop-shadow(0 20px 30px rgba(160,80,70,.35));transition:opacity .5s ease}
+  .env-back{position:absolute;inset:0;background:var(--env);border-radius:12px}
+  .env-front{position:absolute;left:0;right:0;bottom:0;height:128px;background:linear-gradient(180deg,var(--env),var(--env-dark));border-radius:0 0 12px 12px;z-index:6;clip-path:polygon(0 22%,50% 0,100% 22%,100% 100%,0 100%)}
+  .env-side{position:absolute;bottom:0;width:50%;height:100%;z-index:5}
+  .env-left{left:0;background:linear-gradient(135deg,var(--env-dark),transparent 60%);clip-path:polygon(0 0,0 100%,52% 100%);border-radius:0 0 0 12px}
+  .env-right{right:0;background:linear-gradient(225deg,var(--env-dark),transparent 60%);clip-path:polygon(100% 0,100% 100%,48% 100%);border-radius:0 0 12px 0}
+  .flap{position:absolute;top:0;left:0;width:100%;height:128px;z-index:7;background:linear-gradient(180deg,var(--env-flap),var(--env));clip-path:polygon(0 0,100% 0,50% 84%);transform-origin:top;transition:transform .6s ease;border-radius:12px 12px 0 0}
+  .flap::after{content:"💛";position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-size:20px}
+  .stage-open .flap{transform:rotateX(180deg);z-index:1}
+
+  /* ---------- СЛОЖЕННАЯ ОТКРЫТКА (книжка) ---------- */
+  .cardwrap{
+    position:absolute;left:50%;top:50%;
+    width:180px;height:230px;               /* размер ОДНОЙ половины */
+    margin:-115px 0 0 -90px;
+    transform-style:preserve-3d;
+    transform:translateY(20px) scale(.5);
+    opacity:0;z-index:4;
+    transition:transform 1s cubic-bezier(.2,.8,.2,1),opacity .5s ease,z-index 0s;
+  }
+  /* шаг 1: выехала из конверта */
+  .stage-out .cardwrap{opacity:1;transform:translateY(-80px) scale(.6);z-index:4}
+  /* шаг 2: крупный план, ближе к экрану */
+  .stage-zoom .cardwrap{opacity:1;transform:translateY(0) scale(1.25);z-index:10}
+  /* шаг 3: раскрыта — сдвигаем чтобы обе половины были по центру */
+  .stage-reveal .cardwrap{opacity:1;transform:translateX(90px) translateY(0) scale(1.25);z-index:10}
+
+  .page{
+    position:absolute;top:0;width:180px;height:230px;
+    border-radius:8px;
+    backface-visibility:hidden;
+    overflow:hidden;
+    box-shadow:0 8px 22px rgba(120,70,60,.25);
+  }
+
+  /* ПРАВАЯ половина — статичная (обложка/фото-сторона) */
+  .page.right{left:0;background:var(--paper)}
+
+  /* ЛЕВАЯ половина — откидная створка книжки */
+  .leaf{
+    position:absolute;top:0;left:0;width:180px;height:230px;
+    transform-origin:left center;
+    transform:rotateY(180deg);          /* сложена поверх правой */
+    transform-style:preserve-3d;
+    transition:transform 1.1s cubic-bezier(.2,.8,.2,1);
+  }
+  .stage-reveal .leaf{transform:rotateY(0deg)}   /* раскрывается влево */
+
+  .leaf .face{position:absolute;inset:0;border-radius:8px;overflow:hidden;backface-visibility:hidden;box-shadow:0 8px 22px rgba(120,70,60,.25)}
+  /* лицевая сторона створки (видна когда закрыта) — узор/сердце */
+  .leaf .cover{background:linear-gradient(160deg,#fbe6d8,#f7d3c0);display:flex;align-items:center;justify-content:center}
+  .leaf .cover span{font-size:34px}
+  /* внутренняя сторона створки (видна после раскрытия) — ТЕКСТ */
+  .leaf .inner{transform:rotateY(180deg);background:var(--paper);padding:20px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+
+  .inner .kicker{font-family:'Manrope',sans-serif;letter-spacing:.24em;text-transform:uppercase;font-size:9px;color:var(--gold);margin-bottom:6px}
+  .inner h1{font-family:'Caveat',cursive;font-size:30px;line-height:.95;color:var(--rose-deep);margin-bottom:6px}
+  .inner p{font-size:15px;color:#6f4f40;margin:3px 0;line-height:1.35}
+  .inner .joke{font-family:'Caveat',cursive;font-size:17px;color:var(--rose);margin-top:6px}
+  .inner .meta{margin-top:8px;font-family:'Manrope',sans-serif;font-size:12px;color:#8a6757}
+  .inner .meta b{color:var(--ink)}
+
+  /* ПРАВАЯ сторона — ФОТО-КНИЖКА */
+  .photo{position:absolute;inset:0;background:#efe0d5;overflow:hidden}
+  .photo img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .35s ease}
+  .pagenum{position:absolute;bottom:8px;right:10px;font-family:'Manrope',sans-serif;font-size:11px;color:#fff;background:rgba(120,70,60,.55);padding:3px 9px;border-radius:999px;backdrop-filter:blur(2px)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+  <div class="heart-bg" id="hearts"></div>
+
+  <div class="scene" id="scene" role="button" tabindex="0" aria-label="Открыть">
+
+    <!-- конверт -->
+    <div class="envelope" id="env">
+      <div class="env-back"></div>
+      <div class="env-side env-left"></div>
+      <div class="env-side env-right"></div>
+      <div class="env-front"></div>
+      <div class="flap"></div>
+    </div>
+
+    <!-- складная открытка -->
+    <div class="cardwrap" id="cardwrap">
+      <!-- правая половина: ФОТО-КНИЖКА -->
+      <div class="page right">
+        <div class="photo" id="photo">
+          <img id="pageimg" alt="">
+          <div class="pagenum" id="pagenum"></div>
+        </div>
+      </div>
+      <!-- левая створка: снаружи узор, внутри ТЕКСТ -->
+      <div class="leaf">
+        <div class="face cover"><span>💌</span></div>
+        <div class="face inner">
+          <p class="kicker">Приглашение</p>
+          <!-- ЗАМЕНИ текст под себя -->
+          <h1>Наш первый<br>месяц</h1>
+          <p>Целый месяц с тобой —<br>и это только начало 💛</p>
+          <p class="joke">оригинал 1/1, между прочим 😏</p>
+          <p class="meta"><b>Суббота, 18:00</b><br>место — сюрприз ✨</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="nav" id="nav">
+    <button class="navbtn" id="prev" aria-label="Назад" disabled>‹</button>
+    <span class="hint" id="hint">нажми вперёд 💌</span>
+    <button class="navbtn" id="next" aria-label="Вперёд">›</button>
+  </div>
+
+<script>
+const PHOTOS=["photos/1.jpg","photos/2.jpg","photos/3.jpg","photos/4.jpg","photos/5.jpg"];
+  const hearts=document.getElementById('hearts');
+  const em=['💛','💖','🧡','💗','✨'];
+  for(let i=0;i<18;i++){
+    const s=document.createElement('span');
+    s.textContent=em[Math.floor(Math.random()*em.length)];
+    s.style.left=Math.random()*100+'%';
+    s.style.fontSize=(15+Math.random()*22)+'px';
+    s.style.animationDuration=(6+Math.random()*8)+'s';
+    s.style.animationDelay=(Math.random()*8)+'s';
+    hearts.appendChild(s);
+  }
+
+  const scene=document.getElementById('scene');
+  const hint=document.getElementById('hint');
+  const env=document.getElementById('env');
+  const prevBtn=document.getElementById('prev');
+  const nextBtn=document.getElementById('next');
+  const pageimg=document.getElementById('pageimg');
+  const pagenum=document.getElementById('pagenum');
+
+  const stages=['stage-open','stage-out','stage-zoom','stage-reveal'];
+  const hints=['нажми вперёд 💌','конверт открыт ✨','открытка выехала 💌','поближе… 🔍'];
+  // всего шагов: этапы открытия (4) + перелистывание фото (PHOTOS.length)
+  const total = stages.length + PHOTOS.length;   // финальный «шаг» = последняя фото
+  let step=0;
+
+  function setPhoto(idx){
+    pageimg.style.opacity='0';
+    setTimeout(()=>{
+      pageimg.src=PHOTOS[idx];
+      pagenum.textContent=(idx+1)+' / '+PHOTOS.length;
+      pageimg.style.opacity='1';
+    },180);
+  }
+
+  function render(){
+    // применяем классы этапов: всё до раскрытия
+    const openStep=Math.min(step,stages.length);
+    stages.forEach((cls,i)=>scene.classList.toggle(cls, i<openStep));
+    env.style.opacity=(step>=2)?'0':'1';
+
+    // фаза открытия vs фаза фото
+    if(step<=stages.length){
+      hint.textContent=hints[step]||'листай фото →';
+      // на этапе раскрытия показываем первую фотку
+      if(step===stages.length) setPhoto(0);
+    }else{
+      const photoIdx=step-stages.length; // 1..N-1 → индекс 1..
+      setPhoto(photoIdx);
+      hint.textContent = (photoIdx===PHOTOS.length-1)?'наша история 💛':'листай дальше →';
+    }
+
+    prevBtn.disabled=(step===0);
+    nextBtn.disabled=(step>=total-1);
+
+    // салют на самой первой фотке (раскрытие)
+    if(step===stages.length && !scene.dataset.done){
+      scene.dataset.done='1';
+      for(let i=0;i<20;i++){
+        const s=document.createElement('span');
+        s.textContent='💛';
+        s.style.left=Math.random()*100+'%';
+        s.style.fontSize=(18+Math.random()*22)+'px';
+        s.style.animationDuration=(4+Math.random()*4)+'s';
+        hearts.appendChild(s);
+      }
+    }
+    if(step<stages.length) scene.dataset.done='';
+  }
+
+  function go(dir){
+    step=Math.max(0,Math.min(total-1,step+dir));
+    render();
+  }
+
+  nextBtn.addEventListener('click',()=>go(1));
+  prevBtn.addEventListener('click',()=>go(-1));
+  scene.addEventListener('click',()=>go(1));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='Enter'||e.key===' '){e.preventDefault();go(1);}
+    if(e.key==='ArrowLeft'){e.preventDefault();go(-1);}
+  });
+
+  render();
+
+
+</script>
+</body>
+</html>
